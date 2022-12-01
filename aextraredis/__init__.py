@@ -26,9 +26,13 @@ class ExtraRedis:
         values = await self.redis.mget(keys)
         return dict(zip(keys, values))
 
+
     async def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
         mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         await self.redis.mset(mapping)
+
+    # mhgetall(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
+    # mhgetfield(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
 
     # @staticmethod
     # def remove_key_level(keys: list[str], level: int) -> list[str]:
