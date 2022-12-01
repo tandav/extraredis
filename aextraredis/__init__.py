@@ -14,22 +14,46 @@ class ExtraRedis:
             password=os.environ['REDIS_PASSWORD'],
         )
 
-    async def keys(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
+    async def addprefix(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
         if keys is None:
             return await self.redis.keys(prefix + b':*')
         else:
             return [prefix + b':' + k for k in keys]
 
 
+    def removeprefix(self, prefix: bytes, pkeys: list[bytes]) -> list[bytes]:
+        return [k.removeprefix(prefix + b':') for k in pkeys]
+
+
     async def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
-        keys = await self.keys(prefix, keys)
-        values = await self.redis.mget(keys)
+        pkeys = await self.addprefix(prefix, keys)
+        values = await self.redis.mget(pkeys)
+        if keys is None:
+            keys = self.removeprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
 
     async def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
         mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         await self.redis.mset(mapping)
+
+
+    async def mhget_fields(
+        self,
+        prefix: bytes,
+        keys: list[bytes] | None = None,
+        fields: list[bytes] | None = None,
+    ) -> dict[bytes, dict[bytes, bytes]]:
+        pkeys = await self.pkeys(prefix, keys)
+        pipe = self.redis.pipeline()
+        for key in pkeys:
+            if fields is None:
+                pipe.hgetall(key)
+            else:
+                pipe.hmget(key, fields)
+        values = await pipe.execute()
+        # values = await self.redis.mhget(keys, fields)
+        return dict(zip(keys, values))
 
     # mhgetall(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
     # mhgetfield(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:

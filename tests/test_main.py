@@ -1,11 +1,11 @@
 import pytest
-import os
 import itertools
 import dotenv
 # from redis.asyncio import Redis
 from fakeredis.aioredis import FakeRedis
 from aextraredis import ExtraRedis
 import pytest_asyncio
+
 
 @pytest.fixture
 def redis():
@@ -55,21 +55,30 @@ async def test_get_from_khashtable(redis, khashtable):
 @pytest.mark.asyncio
 async def test_keys(redis, extraredis, kvtable):
     assert await redis.keys() == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
-    assert await extraredis.keys(b'kvtable') == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
-    assert await extraredis.keys(b'kvtable', [b'0', b'1']) == [b'kvtable:0', b'kvtable:1']
+    assert await extraredis.addprefix(b'kvtable') == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
+    assert await extraredis.addprefix(b'kvtable', [b'0', b'1']) == [b'kvtable:0', b'kvtable:1']
 
 
 @pytest.mark.asyncio
 async def test_mget(extraredis, kvtable):
-    assert await extraredis.mget(b'kvtable') == {b'kvtable:0': b'0', b'kvtable:1': b'1', b'kvtable:2': b'2'}
-    assert await extraredis.mget(b'kvtable', [b'0', b'1']) == {b'kvtable:0': b'0', b'kvtable:1': b'1'}
+    assert await extraredis.mget(b'kvtable') == {b'0': b'0', b'1': b'1', b'2': b'2'}
+    assert await extraredis.mget(b'kvtable', [b'0', b'1']) == {b'0': b'0', b'1': b'1'}
 
 
-@pytest.mark.asyncio
-async def test_mset(extraredis, kvtable):
-    await extraredis.mset(b'kvtable', {b'3': b'3', b'4': b'4'})
-    assert await extraredis.mget(b'kvtable') == {b'kvtable:0': b'0', b'kvtable:1': b'1', b'kvtable:2': b'2', b'kvtable:3': b'3', b'kvtable:4': b'4'}
+# @pytest.mark.asyncio
+# async def test_mset(extraredis, kvtable):
+#     await extraredis.mset(b'kvtable', {b'3': b'3', b'4': b'4'})
+#     assert await extraredis.mget(b'kvtable') == {b'kvtable:0': b'0', b'kvtable:1': b'1', b'kvtable:2': b'2', b'kvtable:3': b'3', b'kvtable:4': b'4'}
 
+
+# @pytest.mark.asyncio
+# async def test_mhget_fields(extraredis, khashtable):
+#     assert await extraredis.mhget_fields(b'khashtable') == {
+#         b'1': {b'a': b'1', b'b': b'10', b'c': b'100'},
+#         b'2': {b'a': b'2', b'b': b'20', b'c': b'200'},
+#         b'3': {b'a': b'3', b'b': b'30', b'c': b'300'},
+#     }
+    # assert extraredis.mhget_fields(b'khashtable', [b'1']) == {b'a': b'1', b'b': b'10', b'c': b'100'}
 
 # @pytest.mark.asyncio
 # async def test_prefix_mhset(redis, state):
