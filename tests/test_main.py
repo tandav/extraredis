@@ -55,8 +55,8 @@ async def test_get_from_khashtable(redis, khashtable):
 @pytest.mark.asyncio
 async def test_keys(redis, extraredis, kvtable):
     assert await redis.keys() == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
-    assert await extraredis.addprefix(b'kvtable') == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
-    assert await extraredis.addprefix(b'kvtable', [b'0', b'1']) == [b'kvtable:0', b'kvtable:1']
+    assert await extraredis.maddprefix(b'kvtable') == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
+    assert await extraredis.maddprefix(b'kvtable', [b'0', b'1']) == [b'kvtable:0', b'kvtable:1']
 
 
 @pytest.mark.asyncio
@@ -72,13 +72,25 @@ async def test_mset(extraredis):
 
 
 @pytest.mark.asyncio
+async def test_mhget_field(extraredis, khashtable):
+    assert await extraredis.mhget_field(b'khashtable', field=b'b') == {b'0': b'0', b'1': b'10', b'2': b'20'}
+    assert await extraredis.mhget_field(b'khashtable', field=b'b', keys=[b'0', b'1']) == {b'0': b'0', b'1': b'10'}
+
+
+@pytest.mark.asyncio
 async def test_mhget_fields(extraredis, khashtable):
     assert await extraredis.mhget_fields(b'khashtable') == {
         b'0': {b'a': b'0', b'b': b'0', b'c': b'0'},
         b'1': {b'a': b'1', b'b': b'10', b'c': b'100'},
         b'2': {b'a': b'2', b'b': b'20', b'c': b'200'},
     }
-    assert await extraredis.mhget_fields(b'khashtable', [b'1']) == {b'1': {b'a': b'1', b'b': b'10', b'c': b'100'}}
+    assert await extraredis.mhget_fields(b'khashtable', fields=[b'a', b'b']) == {
+        b'0': {b'a': b'0', b'b': b'0'},
+        b'1': {b'a': b'1', b'b': b'10'},
+        b'2': {b'a': b'2', b'b': b'20'},
+    }
+    assert await extraredis.mhget_fields(b'khashtable', keys=[b'1']) == {b'1': {b'a': b'1', b'b': b'10', b'c': b'100'}}
+    assert await extraredis.mhget_fields(b'khashtable', keys=[b'1'], fields=[b'a', b'b']) == {b'1': {b'a': b'1', b'b': b'10'}}
 
 # @pytest.mark.asyncio
 # async def test_prefix_mhset(redis, state):
