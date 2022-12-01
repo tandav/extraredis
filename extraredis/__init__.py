@@ -2,7 +2,7 @@ __version__ = '0.0.1'
 import os
 import dotenv
 
-import redis.asyncio as redis_asyncio
+import redis.asyncio as redis_sync
 import redis as redis_sync
 # import redis.asyncio as redis_asyncio
 # import redis as redis_sync
@@ -10,7 +10,7 @@ import redis as redis_sync
 # Redis = redis_asyncio.Redis
 
 # redis_module = redis_asyncio.Redis
-redis_module = redis_asyncio
+redis_module = redis_sync
 # redis_module = redis_sync
 
 
@@ -28,9 +28,9 @@ class ExtraRedis:
         return prefix + b':' + key
 
 
-    async def maddprefix(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
+    def maddprefix(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
         if keys is None:
-            return await self.redis.keys(prefix + b':*')
+            return self.redis.keys(prefix + b':*')
         else:
             return [self.addprefix(prefix, k) for k in keys]
 
@@ -38,44 +38,44 @@ class ExtraRedis:
         return [k.removeprefix(prefix + b':') for k in pkeys]
 
 
-    async def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
-        pkeys = await self.maddprefix(prefix, keys)
-        values = await self.redis.mget(pkeys)
+    def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
+        pkeys = self.maddprefix(prefix, keys)
+        values = self.redis.mget(pkeys)
         if keys is None:
             keys = self.mremoveprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
 
-    async def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
+    def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
         mapping = {prefix + b':' + k: v for k, v in mapping.items()}
-        await self.redis.mset(mapping)
+        self.redis.mset(mapping)
 
 
-    async def mhget_field(
+    def mhget_field(
         self, 
         prefix: bytes, 
         field: bytes,
         keys: list[bytes] | None = None,
     ) -> bytes | None:
-        out = await self.mhget_fields(prefix, keys, [field])
+        out = self.mhget_fields(prefix, keys, [field])
         out = {k: v[field] for k, v in out.items()}
         return out
 
 
-    async def mhget_fields(
+    def mhget_fields(
         self,
         prefix: bytes,
         keys: list[bytes] | None = None,
         fields: list[bytes] | None = None,
     ) -> dict[bytes, dict[bytes, bytes]]:
-        pkeys = await self.maddprefix(prefix, keys)
+        pkeys = self.maddprefix(prefix, keys)
         pipe = self.redis.pipeline()
         for key in pkeys:
             if fields is None:
                 pipe.hgetall(key)
             else:
                 pipe.hmget(key, fields)
-        values = await pipe.execute()
+        values = pipe.execute()
         if fields is not None:
             values = [dict(zip(fields, v)) for v in values]
         if keys is None:
@@ -83,29 +83,29 @@ class ExtraRedis:
         return dict(zip(keys, values))
 
 
-    async def mhset_field(
+    def mhset_field(
         self,
         prefix: bytes,
         field: bytes,
         mapping: dict[bytes, bytes],
     ) -> None:
-        pkeys = await self.maddprefix(prefix, mapping.keys())
+        pkeys = self.maddprefix(prefix, mapping.keys())
         pipe = self.redis.pipeline()
         for key, value in zip(pkeys, mapping.values()):
             pipe.hset(key, field, value)
-        await pipe.execute()
+        pipe.execute()
 
 
-    async def mhset_fields(
+    def mhset_fields(
         self,
         prefix: bytes,
         mapping: dict[bytes, dict[bytes, bytes]],
     ) -> None:
-        pkeys = await self.maddprefix(prefix, mapping.keys())
+        pkeys = self.maddprefix(prefix, mapping.keys())
         pipe = self.redis.pipeline()
         for key, value in zip(pkeys, mapping.values()):
             pipe.hset(key, mapping=value)
-        await pipe.execute()
+        pipe.execute()
 
 
     # mhgetall(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
