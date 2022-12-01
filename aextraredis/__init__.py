@@ -87,6 +87,17 @@ class ExtraRedis:
         await pipe.execute()
 
 
+    async def mhset_fields(
+        self,
+        prefix: bytes,
+        mapping: dict[bytes, dict[bytes, bytes]],
+    ) -> None:
+        pkeys = await self.maddprefix(prefix, mapping.keys())
+        pipe = self.redis.pipeline()
+        for key, value in zip(pkeys, mapping.values()):
+            pipe.hset(key, mapping=value)
+        await pipe.execute()
+
 
     # mhgetall(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
     # mhgetfield(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
