@@ -41,6 +41,7 @@ class ExtraRedis:
         mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         await self.redis.mset(mapping)
 
+
     async def mhget_field(
         self, 
         prefix: bytes, 
@@ -48,13 +49,9 @@ class ExtraRedis:
         keys: list[bytes] | None = None,
     ) -> bytes | None:
         out = await self.mhget_fields(prefix, keys, [field])
-        print('*********')
-        print(out)
         out = {k: v[field] for k, v in out.items()}
         return out
 
-        # pkeys = await self.maddprefix(prefix, keys)
-        # return await self.redis.hget(pkey[0], field)
 
     async def mhget_fields(
         self,
