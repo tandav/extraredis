@@ -78,7 +78,7 @@ async def test_mhget_fields(extraredis, khashtable):
         b'1': {b'a': b'1', b'b': b'10', b'c': b'100'},
         b'2': {b'a': b'2', b'b': b'20', b'c': b'200'},
     }
-    # assert extraredis.mhget_fields(b'khashtable', [b'1']) == {b'a': b'1', b'b': b'10', b'c': b'100'}
+    assert await extraredis.mhget_fields(b'khashtable', [b'1']) == {b'1': {b'a': b'1', b'b': b'10', b'c': b'100'}}
 
 # @pytest.mark.asyncio
 # async def test_prefix_mhset(redis, state):
