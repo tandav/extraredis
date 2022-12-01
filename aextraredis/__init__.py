@@ -21,9 +21,14 @@ class ExtraRedis:
             return [prefix + b':' + k for k in keys]
 
 
-    async def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
+    async def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
         keys = await self.keys(prefix, keys)
-        return await self.redis.mget(keys)
+        values = await self.redis.mget(keys)
+        return dict(zip(keys, values))
+
+    async def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
+        mapping = {prefix + b':' + k: v for k, v in mapping.items()}
+        await self.redis.mset(mapping)
 
     # @staticmethod
     # def remove_key_level(keys: list[str], level: int) -> list[str]:
