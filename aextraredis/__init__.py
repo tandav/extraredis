@@ -44,7 +44,8 @@ class ExtraRedis:
         keys: list[bytes] | None = None,
         fields: list[bytes] | None = None,
     ) -> dict[bytes, dict[bytes, bytes]]:
-        pkeys = await self.pkeys(prefix, keys)
+        pkeys = await self.addprefix(prefix, keys)
+        
         pipe = self.redis.pipeline()
         for key in pkeys:
             if fields is None:
@@ -52,6 +53,8 @@ class ExtraRedis:
             else:
                 pipe.hmget(key, fields)
         values = await pipe.execute()
+        if keys is None:
+            keys = self.removeprefix(prefix, pkeys)
         # values = await self.redis.mhget(keys, fields)
         return dict(zip(keys, values))
 

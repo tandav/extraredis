@@ -71,13 +71,13 @@ async def test_mset(extraredis):
     assert await extraredis.mget(b'kvtable') == {b'3': b'3', b'4': b'4'}
 
 
-# @pytest.mark.asyncio
-# async def test_mhget_fields(extraredis, khashtable):
-#     assert await extraredis.mhget_fields(b'khashtable') == {
-#         b'1': {b'a': b'1', b'b': b'10', b'c': b'100'},
-#         b'2': {b'a': b'2', b'b': b'20', b'c': b'200'},
-#         b'3': {b'a': b'3', b'b': b'30', b'c': b'300'},
-#     }
+@pytest.mark.asyncio
+async def test_mhget_fields(extraredis, khashtable):
+    assert await extraredis.mhget_fields(b'khashtable') == {
+        b'0': {b'a': b'0', b'b': b'0', b'c': b'0'},
+        b'1': {b'a': b'1', b'b': b'10', b'c': b'100'},
+        b'2': {b'a': b'2', b'b': b'20', b'c': b'200'},
+    }
     # assert extraredis.mhget_fields(b'khashtable', [b'1']) == {b'a': b'1', b'b': b'10', b'c': b'100'}
 
 # @pytest.mark.asyncio
