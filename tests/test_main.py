@@ -92,6 +92,14 @@ async def test_mhget_fields(extraredis, khashtable):
     assert await extraredis.mhget_fields(b'khashtable', keys=[b'1']) == {b'1': {b'a': b'1', b'b': b'10', b'c': b'100'}}
     assert await extraredis.mhget_fields(b'khashtable', keys=[b'1'], fields=[b'a', b'b']) == {b'1': {b'a': b'1', b'b': b'10'}}
 
+
+@pytest.mark.asyncio
+async def test_mhset_field(extraredis, khashtable):
+    await extraredis.mhset_field(b'khashtable', field=b'c', mapping={b'2': b'222', b'3': b'333'})
+    assert await extraredis.mhget_field(b'khashtable', field=b'c', keys=[b'2', b'3']) == {b'2': b'222', b'3': b'333'}
+
+
+
 # @pytest.mark.asyncio
 # async def test_prefix_mhset(redis, state):
 #     await state.prefix_mhset(b'baz', {b'1': b'SUCCESS', b'2': b'FAILED'}, itertools.repeat(b'status'))

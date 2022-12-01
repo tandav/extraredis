@@ -73,8 +73,19 @@ class ExtraRedis:
             keys = self.mremoveprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
-    # async def mhset_field(self, prefix: bytes, key: bytes, field: bytes, value: bytes) -> None:
-        # await self.redis.hset(prefix + b':' + key, field, value)
+
+    async def mhset_field(
+        self,
+        prefix: bytes,
+        field: bytes,
+        mapping: dict[bytes, bytes],
+    ) -> None:
+        pkeys = await self.maddprefix(prefix, mapping.keys())
+        pipe = self.redis.pipeline()
+        for key, value in zip(pkeys, mapping.values()):
+            pipe.hset(key, field, value)
+        await pipe.execute()
+
 
 
     # mhgetall(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
