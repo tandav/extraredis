@@ -1,5 +1,4 @@
 import pytest
-import pytest
 
 from extraredis import ExtraRedis
 
