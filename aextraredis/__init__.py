@@ -2,8 +2,9 @@ __version__ = '0.0.1'
 import os
 
 import dotenv
-import redis as redis_sync
-import redis.asyncio as redis_asyncio
+
+import redis.asyncio as redis_asyncio  # isort:skip
+import redis as redis_sync  # isort:skip
 
 redis_module = redis_asyncio
 

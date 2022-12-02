@@ -1,10 +1,12 @@
 import dotenv
-import fakeredis as fake_redis_sync
-import fakeredis.aioredis as fake_redis_async
 import pytest
 import pytest_asyncio
 
 from aextraredis import ExtraRedis
+
+import fakeredis.aioredis as fake_redis_async  # isort:skip
+import fakeredis as fake_redis_sync  # isort:skip
+
 
 fake_redis_module = fake_redis_async
 

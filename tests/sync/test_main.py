@@ -1,9 +1,11 @@
 import dotenv
-import fakeredis as fake_redis_sync
-import fakeredis.aioredis as fake_redis_sync
 import pytest
 
 from extraredis import ExtraRedis
+
+import fakeredis.aioredis as fake_redis_sync  # isort:skip
+import fakeredis as fake_redis_sync  # isort:skip
+
 
 fake_redis_module = fake_redis_sync
 

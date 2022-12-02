@@ -20,8 +20,8 @@ def main():
             additional_replacements=ADDITIONAL_REPLACEMENTS,
         ),
         unasync.Rule(
-            fromdir='/tests/',
-            todir='/tests_sync/',
+            fromdir='/tests/async/',
+            todir='/tests/sync/',
             additional_replacements=ADDITIONAL_REPLACEMENTS,
         ),
     ]
