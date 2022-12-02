@@ -1,12 +1,10 @@
-import pytest
 import dotenv
-import fakeredis.aioredis as fake_redis_async
 import fakeredis as fake_redis_sync
-
-# from fakeredis.aioredis import FakeRedis as FakeRedisAsync
-# from fakeredis import FakeRedis as FakeRedisSync
-from aextraredis import ExtraRedis
+import fakeredis.aioredis as fake_redis_async
+import pytest
 import pytest_asyncio
+
+from aextraredis import ExtraRedis
 
 fake_redis_module = fake_redis_async
 
@@ -16,7 +14,6 @@ pytest_mark_asyncio = pytest.mark.asyncio
 
 def pytest_mark_sync(f):
     return f  # no-op decorator
-
 
 
 @pytest.fixture
@@ -37,7 +34,7 @@ async def kvtable(redis):
         pipe.set(f'kvtable:{i}'.encode(), i)
     await pipe.execute()
 
-    
+
 @pytest_asyncio.fixture
 async def khashtable(redis):
     pipe = redis.pipeline()
@@ -113,10 +110,12 @@ async def test_mhset_field(extraredis, khashtable):
 
 @pytest_mark_asyncio
 async def test_mhset_fields(extraredis, khashtable):
-    await extraredis.mhset_fields(b'khashtable', mapping={
-        b'2': {b'a': b'222', b'b': b'2222', b'c': b'22222'},
-        b'3': {b'a': b'333', b'b': b'3333', b'c': b'33333'},
-    })
+    await extraredis.mhset_fields(
+        b'khashtable', mapping={
+            b'2': {b'a': b'222', b'b': b'2222', b'c': b'22222'},
+            b'3': {b'a': b'333', b'b': b'3333', b'c': b'33333'},
+        },
+    )
     assert await extraredis.mhget_fields(b'khashtable', keys=[b'2', b'3']) == {
         b'2': {b'a': b'222', b'b': b'2222', b'c': b'22222'},
         b'3': {b'a': b'333', b'b': b'3333', b'c': b'33333'},
@@ -143,7 +142,6 @@ async def test_mhset_fields(extraredis, khashtable):
 #     # await pipe.execute()
 #     await state.mhset('foo', {'1': 'SUCCESS', '2': 'FAILED'}, itertools.repeat('status'))
 #     assert await redis.hgetall('foo:1') == {b'status': b'SUCCESS'}
-
 
 
 # # def test_remove_key_level():

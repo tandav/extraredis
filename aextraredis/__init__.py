@@ -1,17 +1,11 @@
 __version__ = '0.0.1'
 import os
+
 import dotenv
-
-import redis.asyncio as redis_asyncio
 import redis as redis_sync
-# import redis.asyncio as redis_asyncio
-# import redis as redis_sync
-# from redis.asyncio import Redis
-# Redis = redis_asyncio.Redis
+import redis.asyncio as redis_asyncio
 
-# redis_module = redis_asyncio.Redis
 redis_module = redis_asyncio
-# redis_module = redis_sync
 
 
 class ExtraRedis:
@@ -27,7 +21,6 @@ class ExtraRedis:
     def addprefix(prefix: bytes, key: bytes) -> bytes:
         return prefix + b':' + key
 
-
     async def maddprefix(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
         if keys is None:
             return await self.redis.keys(prefix + b':*')
@@ -37,7 +30,6 @@ class ExtraRedis:
     def mremoveprefix(self, prefix: bytes, pkeys: list[bytes]) -> list[bytes]:
         return [k.removeprefix(prefix + b':') for k in pkeys]
 
-
     async def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
         pkeys = await self.maddprefix(prefix, keys)
         values = await self.redis.mget(pkeys)
@@ -45,22 +37,19 @@ class ExtraRedis:
             keys = self.mremoveprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
-
     async def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
         mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         await self.redis.mset(mapping)
 
-
     async def mhget_field(
-        self, 
-        prefix: bytes, 
+        self,
+        prefix: bytes,
         field: bytes,
         keys: list[bytes] | None = None,
     ) -> bytes | None:
         out = await self.mhget_fields(prefix, keys, [field])
         out = {k: v[field] for k, v in out.items()}
         return out
-
 
     async def mhget_fields(
         self,
@@ -82,7 +71,6 @@ class ExtraRedis:
             keys = self.mremoveprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
-
     async def mhset_field(
         self,
         prefix: bytes,
@@ -95,7 +83,6 @@ class ExtraRedis:
             pipe.hset(key, field, value)
         await pipe.execute()
 
-
     async def mhset_fields(
         self,
         prefix: bytes,
@@ -106,90 +93,3 @@ class ExtraRedis:
         for key, value in zip(pkeys, mapping.values()):
             pipe.hset(key, mapping=value)
         await pipe.execute()
-
-
-    # mhgetall(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
-    # mhgetfield(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
-
-    # @staticmethod
-    # def remove_key_level(keys: list[str], level: int) -> list[str]:
-    #     return [key.split(':')[level] for key in keys]
-    #     return [key.split(':')[1] for key in keys]
-
-    # @staticmethod
-    # def remove_table_prefix(keys: list[bytes]) -> list[bytes]:
-    #     return [key.split(b':')[1] for key in keys]
-
-    # async def prefix_mget(self, prefix: bytes, keys: list[str] | None = None) -> dict[str, bytes]:
-    #     if keys is None:
-    #         keys = await self.redis.keys(prefix + b':*')
-    #     values = await self.redis.mget(keys)
-    #     keys = self.remove_table_prefix(keys)
-    #     return dict(zip(keys, values))
-
-    # async def prefix_mhgetall(self, prefix: str, keys: list[str] | None = None) -> dict[str, bytes]:
-    #     keys = await self.redis.keys(f'{prefix}:*')
-    #     pipe = self.redis.pipeline()
-    #     for key in keys:
-    #         pipe.hgetall(key)
-    #     values = await pipe.execute()
-    #     keys = [k.decode() for k in keys]
-    #     return dict(zip(keys, values))
-
-    # async def prefix_mhset(self, prefix: str, nv: dict[str, str], fields: list[str] | None = None):
-    #     if not nv:
-    #         return
-    #     pipe = self.redis.pipeline()
-    #     for (n, v), f in zip(nv.items(), fields):
-    #         pipe.hset(f'{prefix}:{n}', f, v)
-    #     await pipe.execute()
-
-    # async def prefix_mhget(self, prefix: str, fields: list[str], keys: list[str] | None = None) -> dict[str, bytes]:
-    #     if keys is None:
-    #         keys = await self.redis.keys(prefix + b':*')
-    #     pipe = self.redis.pipeline()
-    #     for f, k in zip(fields, keys):
-    #         pipe.hget(k, f)
-    #     values = await pipe.execute()
-    #     print('************')
-    #     print(keys)
-    #     print(values)
-    #     # keys = [k.decode() for k in keys]
-    #     keys = self.remove_table_prefix(keys)
-    #     return dict(zip(keys, values))
-
-    #     for key in keys:
-    #         pipe.hmget(key, fields)
-    #     values = await pipe.execute()
-    #     keys = [k.decode() for k in keys]
-    #     keys = self.remove_table_prefix(keys)
-    #     return dict(zip(keys, values))
-
-    # async def get_task_statuses(self, task_ids: list[str] | None = None) -> dict[str, bytes]:
-    #     if task_ids is None:
-    #         keys = await self.redis.keys(f'{self.prefix_tasks}:*')
-    #     pipe = self.redis.pipeline()
-    #     for key in keys:
-    #         pipe.hget(key, 'status')
-    #     statuses = await pipe.execute()
-    #     keys = [k.decode() for k in keys]
-    #     task_ids = self.remove_table_prefix(keys)
-    #     return dict(zip(task_ids, statuses))
-    #     # values = await self.redis.mget(keys)
-    #     # return dict(zip(keys, values))
-
-    # async def set_task_status(self, task_id: str, status: str):
-    #     await self.redis.hset(f'{self.prefix_tasks}:{task_id}', 'status', status)
-    
-    # async def get_task_status(self, task_id: str) -> str:
-    #     return await self.redis.hget(f'{self.prefix_tasks}:{task_id}', 'status')
-
-    # async def mset_task_status(self, statuses: dict[str, str]):
-    #     if not statuses:
-    #         return
-    #     pipe = self.redis.pipeline()
-    #     for task_id, status in statuses.items():
-    #         pipe.hset(f'{self.prefix_tasks}:{task_id}', 'status', status)
-    #     await pipe.execute()
-    #     # statuses = {f'{self.prefix_tasks}:{k}': v for k, v in statuses.items()}
-    #     # await self.redis.mset(statuses)

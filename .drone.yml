@@ -9,6 +9,7 @@ steps:
   commands:
     - python -m pip install .[dev]
     - pytest
+    - pre-commit run --all-files
 
 - name: pypi_publish
   image: python:latest

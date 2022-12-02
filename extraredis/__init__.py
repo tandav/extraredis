@@ -1,9 +1,10 @@
 __version__ = '0.0.1'
 import os
-import dotenv
 
-import redis.asyncio as redis_sync
+import dotenv
 import redis as redis_sync
+import redis.asyncio as redis_sync
+
 # import redis.asyncio as redis_asyncio
 # import redis as redis_sync
 # from redis.asyncio import Redis
@@ -27,7 +28,6 @@ class ExtraRedis:
     def addprefix(prefix: bytes, key: bytes) -> bytes:
         return prefix + b':' + key
 
-
     def maddprefix(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
         if keys is None:
             return self.redis.keys(prefix + b':*')
@@ -37,7 +37,6 @@ class ExtraRedis:
     def mremoveprefix(self, prefix: bytes, pkeys: list[bytes]) -> list[bytes]:
         return [k.removeprefix(prefix + b':') for k in pkeys]
 
-
     def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
         pkeys = self.maddprefix(prefix, keys)
         values = self.redis.mget(pkeys)
@@ -45,22 +44,19 @@ class ExtraRedis:
             keys = self.mremoveprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
-
     def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
         mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         self.redis.mset(mapping)
 
-
     def mhget_field(
-        self, 
-        prefix: bytes, 
+        self,
+        prefix: bytes,
         field: bytes,
         keys: list[bytes] | None = None,
     ) -> bytes | None:
         out = self.mhget_fields(prefix, keys, [field])
         out = {k: v[field] for k, v in out.items()}
         return out
-
 
     def mhget_fields(
         self,
@@ -82,7 +78,6 @@ class ExtraRedis:
             keys = self.mremoveprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
-
     def mhset_field(
         self,
         prefix: bytes,
@@ -95,7 +90,6 @@ class ExtraRedis:
             pipe.hset(key, field, value)
         pipe.execute()
 
-
     def mhset_fields(
         self,
         prefix: bytes,
@@ -106,7 +100,6 @@ class ExtraRedis:
         for key, value in zip(pkeys, mapping.values()):
             pipe.hset(key, mapping=value)
         pipe.execute()
-
 
     # mhgetall(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
     # mhgetfield(prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
@@ -180,7 +173,7 @@ class ExtraRedis:
 
     # async def set_task_status(self, task_id: str, status: str):
     #     await self.redis.hset(f'{self.prefix_tasks}:{task_id}', 'status', status)
-    
+
     # async def get_task_status(self, task_id: str) -> str:
     #     return await self.redis.hget(f'{self.prefix_tasks}:{task_id}', 'status')
 
