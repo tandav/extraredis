@@ -1,12 +1,14 @@
 import os
 
+from extraredis.base import ExtraRedisBase
+
 import redis.asyncio as redis_asyncio  # isort:skip
 import redis as redis_sync  # isort:skip
 
 redis_module = redis_asyncio
 
 
-class ExtraRedisAsync:
+class ExtraRedisAsync(ExtraRedisBase):
     def __init__(self, redis: redis_module.Redis | None = None):
         self.redis = redis or redis_module.Redis(
             host=os.environ['REDIS_HOST'],
@@ -14,18 +16,11 @@ class ExtraRedisAsync:
             password=os.environ['REDIS_PASSWORD'],
         )
 
-    @staticmethod
-    def addprefix(prefix: bytes, key: bytes) -> bytes:
-        return prefix + b':' + key
-
     async def maddprefix(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
         if keys is None:
             return await self.redis.keys(prefix + b':*')
         else:
             return [self.addprefix(prefix, k) for k in keys]
-
-    def mremoveprefix(self, prefix: bytes, pkeys: list[bytes]) -> list[bytes]:
-        return [k.removeprefix(prefix + b':') for k in pkeys]
 
     async def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
         pkeys = await self.maddprefix(prefix, keys)
