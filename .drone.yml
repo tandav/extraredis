@@ -20,7 +20,7 @@ steps:
     TWINE_USERNAME: __token__
     TWINE_PASSWORD:
       from_secret: GITEA_TOKEN
-    TWINE_REPOSITORY_URL: https://gitea.tandav.me/api/packages/tandav/pypi
+    TWINE_REPOSITORY_URL: https://gitea.tandav.me/api/packages/selfhosted/pypi
   commands:
     - python -m pip install --upgrade setuptools build twine
     - python -m build .
