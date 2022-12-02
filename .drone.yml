@@ -17,9 +17,11 @@ steps:
     event: tag
     tag: 'v\d+.\d+.d+*'
   environment:
-    PYPI_TOKEN:
-      from_secret: PYPI_TOKEN
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD:
+      from_secret: GITEA_TOKEN
+    TWINE_REPOSITORY_URL: https://gitea.tandav.me/api/packages/tandav/pypi
   commands:
     - python -m pip install --upgrade setuptools build twine
     - python -m build .
-    - python -m twine upload dist/* --username __token__ --password $PYPI_TOKEN
+    - python -m twine upload dist/*
