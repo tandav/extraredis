@@ -1,3 +1,3 @@
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 from extraredis._async import ExtraRedisAsync
 from extraredis._sync import ExtraRedis
