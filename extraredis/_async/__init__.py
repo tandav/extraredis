@@ -1,4 +1,3 @@
-__version__ = '0.0.1'
 import os
 
 import dotenv
@@ -9,7 +8,7 @@ import redis as redis_sync  # isort:skip
 redis_module = redis_asyncio
 
 
-class ExtraRedis:
+class ExtraRedisAsync:
     def __init__(self, redis: redis_module.Redis | None = None):
         dotenv.load_dotenv()
         self.redis = redis or redis_module.Redis(
