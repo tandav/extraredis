@@ -9,20 +9,20 @@ ADDITIONAL_REPLACEMENTS = {
     'fake_redis_async': 'fake_redis_sync',
     'pytest_mark_asyncio': 'pytest_mark_sync',
     'pytest_asyncio': 'pytest',
-    'ExtraRedis': 'ExtraRedisAsync',
+    'ExtraRedisAsync': 'ExtraRedis',
 }
 
 
 def main():
     rules = [
         unasync.Rule(
-            fromdir='/extraredis/async/',
-            todir='/extraredis/sync/',
+            fromdir='/extraredis/_async/',
+            todir='/extraredis/_sync/',
             additional_replacements=ADDITIONAL_REPLACEMENTS,
         ),
         unasync.Rule(
-            fromdir='/tests/async/',
-            todir='/tests/sync/',
+            fromdir='/tests/_async/',
+            todir='/tests/_sync/',
             additional_replacements=ADDITIONAL_REPLACEMENTS,
         ),
     ]

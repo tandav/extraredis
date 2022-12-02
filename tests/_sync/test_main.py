@@ -1,4 +1,4 @@
-import dotenv
+import pytest
 import pytest
 
 from extraredis import ExtraRedis
@@ -19,7 +19,6 @@ def pytest_mark_sync(f):
 
 @pytest.fixture
 def redis():
-    dotenv.load_dotenv()
     return fake_redis_module.FakeRedis()
 
 

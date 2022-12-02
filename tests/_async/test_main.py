@@ -1,8 +1,7 @@
-import dotenv
 import pytest
 import pytest_asyncio
 
-from extraredis._async import ExtraRedis
+from extraredis import ExtraRedisAsync
 
 import fakeredis.aioredis as fake_redis_async  # isort:skip
 import fakeredis as fake_redis_sync  # isort:skip
@@ -20,13 +19,12 @@ def pytest_mark_sync(f):
 
 @pytest.fixture
 def redis():
-    dotenv.load_dotenv()
     return fake_redis_module.FakeRedis()
 
 
 @pytest.fixture
 def extraredis(redis):
-    return ExtraRedis(redis)
+    return ExtraRedisAsync(redis)
 
 
 @pytest_asyncio.fixture
