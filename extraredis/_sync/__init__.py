@@ -1,7 +1,5 @@
 import os
 
-import dotenv
-
 import redis.asyncio as redis_sync  # isort:skip
 import redis as redis_sync  # isort:skip
 
@@ -10,7 +8,6 @@ redis_module = redis_sync
 
 class ExtraRedis:
     def __init__(self, redis: redis_module.Redis | None = None):
-        dotenv.load_dotenv()
         self.redis = redis or redis_module.Redis(
             host=os.environ['REDIS_HOST'],
             port=os.environ['REDIS_PORT'],
