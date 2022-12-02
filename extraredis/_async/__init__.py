@@ -1,6 +1,5 @@
 import os
-
-from extraredis.base import ExtraRedisBase
+from typing import AnyStr
 
 import redis.asyncio as redis_asyncio  # isort:skip
 import redis as redis_sync  # isort:skip
@@ -8,47 +7,70 @@ import redis as redis_sync  # isort:skip
 redis_module = redis_asyncio
 
 
-class ExtraRedisAsync(ExtraRedisBase):
-    def __init__(self, redis: redis_module.Redis | None = None):
+class ExtraRedisAsync:
+    def __init__(
+        self,
+        redis: redis_module.Redis | None = None,
+        **kwargs,
+    ):
+        self.decode_responses = kwargs.get('decode_responses', False)
         self.redis = redis or redis_module.Redis(
             host=os.environ['REDIS_HOST'],
             port=os.environ['REDIS_PORT'],
             password=os.environ['REDIS_PASSWORD'],
+            **kwargs,
         )
 
-    async def maddprefix(self, prefix: bytes, keys: list[bytes] | None = None) -> list[bytes]:
+    def addprefix(self, prefix: AnyStr, key: AnyStr) -> bytes:
+        if self.decode_responses:
+            return prefix + ':' + key
+        return prefix + b':' + key
+
+    def mremoveprefix(self, prefix: AnyStr, pkeys: list[AnyStr]) -> list[AnyStr]:
+        if self.decode_responses:
+            return [k.removeprefix(prefix + ':') for k in pkeys]
+        return [k.removeprefix(prefix + b':') for k in pkeys]
+
+    async def maddprefix(self, prefix: AnyStr, keys: list[AnyStr] | None = None) -> list[AnyStr]:
         if keys is None:
-            return await self.redis.keys(prefix + b':*')
+            if self.decode_responses:
+                suffix = ':*'
+            else:
+                suffix = b':*'
+            return await self.redis.keys(prefix + suffix)
         else:
             return [self.addprefix(prefix, k) for k in keys]
 
-    async def mget(self, prefix: bytes, keys: list[bytes] | None = None) -> dict[bytes, bytes]:
+    async def mget(self, prefix: AnyStr, keys: list[AnyStr] | None = None) -> dict[AnyStr, AnyStr]:
         pkeys = await self.maddprefix(prefix, keys)
         values = await self.redis.mget(pkeys)
         if keys is None:
             keys = self.mremoveprefix(prefix, pkeys)
         return dict(zip(keys, values))
 
-    async def mset(self, prefix: bytes, mapping: dict[bytes, bytes]) -> None:
-        mapping = {prefix + b':' + k: v for k, v in mapping.items()}
+    async def mset(self, prefix: AnyStr, mapping: dict[AnyStr, AnyStr]) -> None:
+        if self.decode_responses:
+            mapping = {prefix + ':' + k: v for k, v in mapping.items()}
+        else:
+            mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         await self.redis.mset(mapping)
 
     async def mhget_field(
         self,
-        prefix: bytes,
-        field: bytes,
-        keys: list[bytes] | None = None,
-    ) -> bytes | None:
+        prefix: AnyStr,
+        field: AnyStr,
+        keys: list[AnyStr] | None = None,
+    ) -> AnyStr | None:
         out = await self.mhget_fields(prefix, keys, [field])
         out = {k: v[field] for k, v in out.items()}
         return out
 
     async def mhget_fields(
         self,
-        prefix: bytes,
-        keys: list[bytes] | None = None,
-        fields: list[bytes] | None = None,
-    ) -> dict[bytes, dict[bytes, bytes]]:
+        prefix: AnyStr,
+        keys: list[AnyStr] | None = None,
+        fields: list[AnyStr] | None = None,
+    ) -> dict[AnyStr, dict[AnyStr, AnyStr]]:
         pkeys = await self.maddprefix(prefix, keys)
         pipe = self.redis.pipeline()
         for key in pkeys:
@@ -65,9 +87,9 @@ class ExtraRedisAsync(ExtraRedisBase):
 
     async def mhset_field(
         self,
-        prefix: bytes,
-        field: bytes,
-        mapping: dict[bytes, bytes],
+        prefix: AnyStr,
+        field: AnyStr,
+        mapping: dict[AnyStr, AnyStr],
     ) -> None:
         pkeys = await self.maddprefix(prefix, mapping.keys())
         pipe = self.redis.pipeline()
@@ -77,8 +99,8 @@ class ExtraRedisAsync(ExtraRedisBase):
 
     async def mhset_fields(
         self,
-        prefix: bytes,
-        mapping: dict[bytes, dict[bytes, bytes]],
+        prefix: AnyStr,
+        mapping: dict[AnyStr, dict[AnyStr, AnyStr]],
     ) -> None:
         pkeys = await self.maddprefix(prefix, mapping.keys())
         pipe = self.redis.pipeline()

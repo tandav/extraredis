@@ -23,24 +23,40 @@ def redis():
 
 
 @pytest.fixture
+def redis_decode():
+    return fake_redis_module.FakeRedis(decode_responses=True)
+
+
+@pytest.fixture
 def extraredis(redis):
     return ExtraRedisAsync(redis)
 
 
+@pytest.fixture
+def extraredis_decode(redis_decode):
+    return ExtraRedisAsync(redis_decode, decode_responses=True)
+
+
 @pytest_asyncio.fixture
-async def kvtable(redis):
+async def kvtable(redis, redis_decode):
     pipe = redis.pipeline()
+    pipe_d = redis_decode.pipeline()
     for i in range(3):
         pipe.set(f'kvtable:{i}'.encode(), i)
+        pipe_d.set(f'kvtable:{i}'.encode(), i)
     await pipe.execute()
+    await pipe_d.execute()
 
 
 @pytest_asyncio.fixture
-async def khashtable(redis):
+async def khashtable(redis, redis_decode):
     pipe = redis.pipeline()
+    pipe_d = redis_decode.pipeline()
     for i in range(3):
         pipe.hset(f'khashtable:{i}', mapping={'a': i, 'b': i * 10, 'c': i * 100})
+        pipe_d.hset(f'khashtable:{i}', mapping={'a': i, 'b': i * 10, 'c': i * 100})
     await pipe.execute()
+    await pipe_d.execute()
 
 
 @pytest_mark_asyncio
@@ -62,32 +78,39 @@ async def test_get_from_khashtable(redis, khashtable):
 
 
 @pytest_mark_asyncio
-async def test_keys(redis, extraredis, kvtable):
-    assert await redis.keys() == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
+async def test_keys(extraredis, extraredis_decode, kvtable):
     assert await extraredis.maddprefix(b'kvtable') == [b'kvtable:0', b'kvtable:1', b'kvtable:2']
     assert await extraredis.maddprefix(b'kvtable', [b'0', b'1']) == [b'kvtable:0', b'kvtable:1']
+    assert await extraredis_decode.maddprefix('kvtable') == ['kvtable:0', 'kvtable:1', 'kvtable:2']
+    assert await extraredis_decode.maddprefix('kvtable', ['0', '1']) == ['kvtable:0', 'kvtable:1']
 
 
 @pytest_mark_asyncio
-async def test_mget(extraredis, kvtable):
+async def test_mget(extraredis, extraredis_decode, kvtable):
     assert await extraredis.mget(b'kvtable') == {b'0': b'0', b'1': b'1', b'2': b'2'}
     assert await extraredis.mget(b'kvtable', [b'0', b'1']) == {b'0': b'0', b'1': b'1'}
+    assert await extraredis_decode.mget('kvtable') == {'0': '0', '1': '1', '2': '2'}
+    assert await extraredis_decode.mget('kvtable', ['0', '1']) == {'0': '0', '1': '1'}
 
 
 @pytest_mark_asyncio
-async def test_mset(extraredis):
+async def test_mset(extraredis, extraredis_decode):
     await extraredis.mset(b'kvtable', {b'3': b'3', b'4': b'4'})
     assert await extraredis.mget(b'kvtable') == {b'3': b'3', b'4': b'4'}
+    await extraredis_decode.mset('kvtable', {'3': '3', '4': '4'})
+    assert await extraredis_decode.mget('kvtable') == {'3': '3', '4': '4'}
 
 
 @pytest_mark_asyncio
-async def test_mhget_field(extraredis, khashtable):
+async def test_mhget_field(extraredis, extraredis_decode, khashtable):
     assert await extraredis.mhget_field(b'khashtable', field=b'b') == {b'0': b'0', b'1': b'10', b'2': b'20'}
     assert await extraredis.mhget_field(b'khashtable', field=b'b', keys=[b'0', b'1']) == {b'0': b'0', b'1': b'10'}
+    assert await extraredis_decode.mhget_field('khashtable', field='b') == {'0': '0', '1': '10', '2': '20'}
+    assert await extraredis_decode.mhget_field('khashtable', field='b', keys=['0', '1']) == {'0': '0', '1': '10'}
 
 
 @pytest_mark_asyncio
-async def test_mhget_fields(extraredis, khashtable):
+async def test_mhget_fields(extraredis, extraredis_decode, khashtable):
     assert await extraredis.mhget_fields(b'khashtable') == {
         b'0': {b'a': b'0', b'b': b'0', b'c': b'0'},
         b'1': {b'a': b'1', b'b': b'10', b'c': b'100'},
@@ -101,15 +124,30 @@ async def test_mhget_fields(extraredis, khashtable):
     assert await extraredis.mhget_fields(b'khashtable', keys=[b'1']) == {b'1': {b'a': b'1', b'b': b'10', b'c': b'100'}}
     assert await extraredis.mhget_fields(b'khashtable', keys=[b'1'], fields=[b'a', b'b']) == {b'1': {b'a': b'1', b'b': b'10'}}
 
+    assert await extraredis_decode.mhget_fields('khashtable') == {
+        '0': {'a': '0', 'b': '0', 'c': '0'},
+        '1': {'a': '1', 'b': '10', 'c': '100'},
+        '2': {'a': '2', 'b': '20', 'c': '200'},
+    }
+    assert await extraredis_decode.mhget_fields('khashtable', fields=['a', 'b']) == {
+        '0': {'a': '0', 'b': '0'},
+        '1': {'a': '1', 'b': '10'},
+        '2': {'a': '2', 'b': '20'},
+    }
+    assert await extraredis_decode.mhget_fields('khashtable', keys=['1']) == {'1': {'a': '1', 'b': '10', 'c': '100'}}
+    assert await extraredis_decode.mhget_fields('khashtable', keys=['1'], fields=['a', 'b']) == {'1': {'a': '1', 'b': '10'}}
+
 
 @pytest_mark_asyncio
-async def test_mhset_field(extraredis, khashtable):
+async def test_mhset_field(extraredis, extraredis_decode, khashtable):
     await extraredis.mhset_field(b'khashtable', field=b'c', mapping={b'2': b'222', b'3': b'333'})
     assert await extraredis.mhget_field(b'khashtable', field=b'c', keys=[b'2', b'3']) == {b'2': b'222', b'3': b'333'}
+    await extraredis_decode.mhset_field('khashtable', field='c', mapping={'2': '222', '3': '333'})
+    assert await extraredis_decode.mhget_field('khashtable', field='c', keys=['2', '3']) == {'2': '222', '3': '333'}
 
 
 @pytest_mark_asyncio
-async def test_mhset_fields(extraredis, khashtable):
+async def test_mhset_fields(extraredis, extraredis_decode, khashtable):
     await extraredis.mhset_fields(
         b'khashtable', mapping={
             b'2': {b'a': b'222', b'b': b'2222', b'c': b'22222'},
@@ -120,30 +158,13 @@ async def test_mhset_fields(extraredis, khashtable):
         b'2': {b'a': b'222', b'b': b'2222', b'c': b'22222'},
         b'3': {b'a': b'333', b'b': b'3333', b'c': b'33333'},
     }
-
-# @pytest.mark.asyncio
-# async def test_prefix_mhset(redis, state):
-#     await state.prefix_mhset(b'baz', {b'1': b'SUCCESS', b'2': b'FAILED'}, itertools.repeat(b'status'))
-#     assert await redis.hgetall(b'baz:1') == {b'status': b'SUCCESS'}
-#     assert await redis.hgetall(b'baz:2') == {b'status': b'FAILED'}
-
-
-# @pytest.mark.asyncio
-# async def test_prefix_mhget(redis, state):
-#     await state.prefix_mhset(b'baz', {b'1': b'SUCCESS', b'2': b'FAILED'}, itertools.repeat(b'status'))
-#     assert await state.prefix_mhget(b'baz', itertools.repeat(b'status'), [b'1', b'2']) == {b'1': [b'SUCCESS'], b'2': [b'FAILED']}
-
-
-# @pytest.mark.asyncio
-# async def test_prefix_mhgetall(redis, state):
-#     # pipe = redis.pipeline()
-#     # pipe.hset('foo:1', 'bar', 'baz')
-#     # pipe.hset('foo:2', 'bar', 'baz')
-#     # await pipe.execute()
-#     await state.mhset('foo', {'1': 'SUCCESS', '2': 'FAILED'}, itertools.repeat('status'))
-#     assert await redis.hgetall('foo:1') == {b'status': b'SUCCESS'}
-
-
-# # def test_remove_key_level():
-#     keys = ['tasks:1', 'tasks:2', 'tasks:3']
-#     assert State.remove_key_level(keys, 1) == ['1', '2', '3']
+    await extraredis_decode.mhset_fields(
+        'khashtable', mapping={
+            '2': {'a': '222', 'b': '2222', 'c': '22222'},
+            '3': {'a': '333', 'b': '3333', 'c': '33333'},
+        },
+    )
+    assert await extraredis_decode.mhget_fields('khashtable', keys=['2', '3']) == {
+        '2': {'a': '222', 'b': '2222', 'c': '22222'},
+        '3': {'a': '333', 'b': '3333', 'c': '33333'},
+    }
