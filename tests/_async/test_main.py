@@ -89,8 +89,11 @@ async def test_keys(extraredis, extraredis_decode, kvtable):
 async def test_mget(extraredis, extraredis_decode, kvtable):
     assert await extraredis.mget(b'kvtable') == {b'0': b'0', b'1': b'1', b'2': b'2'}
     assert await extraredis.mget(b'kvtable', [b'0', b'1']) == {b'0': b'0', b'1': b'1'}
+    assert await extraredis.mget(b'kvtable', [b'7']) == {b'7': None}
+
     assert await extraredis_decode.mget('kvtable') == {'0': '0', '1': '1', '2': '2'}
     assert await extraredis_decode.mget('kvtable', ['0', '1']) == {'0': '0', '1': '1'}
+    assert await extraredis_decode.mget('kvtable', ['7']) == {'7': None}
 
 
 @pytest_mark_asyncio
@@ -108,15 +111,28 @@ async def test_hget_field(extraredis, extraredis_decode, khashtable):
     assert await extraredis.hget_field(b'khashtable', b'1', b'a') == b'1'
     assert await extraredis.hget_field(b'khashtable', b'1', b'b') == b'10'
     assert await extraredis.hget_field(b'khashtable', b'1', b'c') == b'100'
+    assert await extraredis.hget_field(b'khashtable', b'1', b'z') is None
+    assert await extraredis.hget_field(b'khashtable', b'7', b'a') is None
+
     assert await extraredis_decode.hget_field('khashtable', '1', 'a') == '1'
     assert await extraredis_decode.hget_field('khashtable', '1', 'b') == '10'
     assert await extraredis_decode.hget_field('khashtable', '1', 'c') == '100'
+    assert await extraredis_decode.hget_field('khashtable', '1', 'z') is None
+    assert await extraredis_decode.hget_field('khashtable', '7', 'a') is None
 
 
 @pytest_mark_asyncio
 async def test_hget_fields(extraredis, extraredis_decode, khashtable):
     assert await extraredis.hget_fields(b'khashtable', b'1', [b'a', b'b']) == {b'a': b'1', b'b': b'10'}
+    assert await extraredis.hget_fields(b'khashtable', b'1', [b'a', b'z']) == {b'a': b'1', b'z': None}
+    assert await extraredis.hget_fields(b'khashtable', b'7', [b'a', b'z']) == {b'a': None, b'z': None}
+    assert await extraredis.hget_fields(b'khashtable', b'1') == {b'a': b'1', b'b': b'10', b'c': b'100'}
+    assert await extraredis.hget_fields(b'khashtable', b'7') == {}
     assert await extraredis_decode.hget_fields('khashtable', '1', ['a', 'b']) == {'a': '1', 'b': '10'}
+    assert await extraredis_decode.hget_fields('khashtable', '1', ['a', 'z']) == {'a': '1', 'z': None}
+    assert await extraredis_decode.hget_fields('khashtable', '7', ['a', 'z']) == {'a': None, 'z': None}
+    assert await extraredis_decode.hget_fields('khashtable', '1') == {'a': '1', 'b': '10', 'c': '100'}
+    assert await extraredis_decode.hget_fields('khashtable', '7') == {}
 
 
 @pytest_mark_asyncio

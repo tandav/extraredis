@@ -74,10 +74,10 @@ class ExtraRedis:
     ) -> dict[AnyStr, AnyStr]:
         pkey = self.addprefix(prefix, key)
         if fields is None:
-            values = self.redis.hgetall(pkey)
+            return self.redis.hgetall(pkey)
         else:
             values = self.redis.hmget(pkey, fields)
-        return dict(zip(fields, values))
+            return dict(zip(fields, values))
 
     def hset_field(
         self,

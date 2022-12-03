@@ -74,10 +74,10 @@ class ExtraRedisAsync:
     ) -> dict[AnyStr, AnyStr]:
         pkey = self.addprefix(prefix, key)
         if fields is None:
-            values = await self.redis.hgetall(pkey)
+            return await self.redis.hgetall(pkey)
         else:
             values = await self.redis.hmget(pkey, fields)
-        return dict(zip(fields, values))
+            return dict(zip(fields, values))
 
     async def hset_field(
         self,
