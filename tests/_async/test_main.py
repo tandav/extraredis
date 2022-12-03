@@ -104,6 +104,38 @@ async def test_mset(extraredis, extraredis_decode):
 
 
 @pytest_mark_asyncio
+async def test_hget_field(extraredis, extraredis_decode, khashtable):
+    assert await extraredis.hget_field(b'khashtable', b'1', b'a') == b'1'
+    assert await extraredis.hget_field(b'khashtable', b'1', b'b') == b'10'
+    assert await extraredis.hget_field(b'khashtable', b'1', b'c') == b'100'
+    assert await extraredis_decode.hget_field('khashtable', '1', 'a') == '1'
+    assert await extraredis_decode.hget_field('khashtable', '1', 'b') == '10'
+    assert await extraredis_decode.hget_field('khashtable', '1', 'c') == '100'
+
+
+@pytest_mark_asyncio
+async def test_hget_fields(extraredis, extraredis_decode, khashtable):
+    assert await extraredis.hget_fields(b'khashtable', b'1', [b'a', b'b']) == {b'a': b'1', b'b': b'10'}
+    assert await extraredis_decode.hget_fields('khashtable', '1', ['a', 'b']) == {'a': '1', 'b': '10'}
+
+
+@pytest_mark_asyncio
+async def test_hset_field(extraredis, extraredis_decode, khashtable):
+    await extraredis.hset_field(b'khashtable', b'1', b'a', b'10')
+    assert await extraredis.hget_field(b'khashtable', b'1', b'a') == b'10'
+    await extraredis_decode.hset_field('khashtable', '1', 'a', '10')
+    assert await extraredis_decode.hget_field('khashtable', '1', 'a') == '10'
+
+
+@pytest_mark_asyncio
+async def test_hset_fields(extraredis, extraredis_decode, khashtable):
+    await extraredis.hset_fields(b'khashtable', b'1', {b'a': b'10', b'b': b'20'})
+    assert await extraredis.hget_fields(b'khashtable', b'1', [b'a', b'b']) == {b'a': b'10', b'b': b'20'}
+    await extraredis_decode.hset_fields('khashtable', '1', {'a': '10', 'b': '20'})
+    assert await extraredis_decode.hget_fields('khashtable', '1', ['a', 'b']) == {'a': '10', 'b': '20'}
+
+
+@pytest_mark_asyncio
 async def test_mhget_field(extraredis, extraredis_decode, khashtable):
     assert await extraredis.mhget_field(b'khashtable', field=b'b') == {b'0': b'0', b'1': b'10', b'2': b'20'}
     assert await extraredis.mhget_field(b'khashtable', field=b'b', keys=[b'0', b'1']) == {b'0': b'0', b'1': b'10'}

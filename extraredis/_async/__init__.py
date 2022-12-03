@@ -57,6 +57,47 @@ class ExtraRedisAsync:
             mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         await self.redis.mset(mapping)
 
+    async def hget_field(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        field: AnyStr,
+    ) -> AnyStr | None:
+        pkey = self.addprefix(prefix, key)
+        return await self.redis.hget(pkey, field)
+
+    async def hget_fields(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        fields: list[AnyStr] | None = None,
+    ) -> dict[AnyStr, AnyStr]:
+        pkey = self.addprefix(prefix, key)
+        if fields is None:
+            values = await self.redis.hgetall(pkey)
+        else:
+            values = await self.redis.hmget(pkey, fields)
+        return dict(zip(fields, values))
+
+    async def hset_field(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        field: AnyStr,
+        value: AnyStr,
+    ) -> None:
+        pkey = self.addprefix(prefix, key)
+        await self.redis.hset(pkey, field, value)
+
+    async def hset_fields(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        mapping: dict[AnyStr, AnyStr],
+    ) -> None:
+        pkey = self.addprefix(prefix, key)
+        await self.redis.hset(pkey, mapping=mapping)
+
     async def mhget_field(
         self,
         prefix: AnyStr,

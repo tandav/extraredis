@@ -57,6 +57,47 @@ class ExtraRedis:
             mapping = {prefix + b':' + k: v for k, v in mapping.items()}
         self.redis.mset(mapping)
 
+    def hget_field(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        field: AnyStr,
+    ) -> AnyStr | None:
+        pkey = self.addprefix(prefix, key)
+        return self.redis.hget(pkey, field)
+
+    def hget_fields(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        fields: list[AnyStr] | None = None,
+    ) -> dict[AnyStr, AnyStr]:
+        pkey = self.addprefix(prefix, key)
+        if fields is None:
+            values = self.redis.hgetall(pkey)
+        else:
+            values = self.redis.hmget(pkey, fields)
+        return dict(zip(fields, values))
+
+    def hset_field(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        field: AnyStr,
+        value: AnyStr,
+    ) -> None:
+        pkey = self.addprefix(prefix, key)
+        self.redis.hset(pkey, field, value)
+
+    def hset_fields(
+        self,
+        prefix: AnyStr,
+        key: AnyStr,
+        mapping: dict[AnyStr, AnyStr],
+    ) -> None:
+        pkey = self.addprefix(prefix, key)
+        self.redis.hset(pkey, mapping=mapping)
+
     def mhget_field(
         self,
         prefix: AnyStr,
