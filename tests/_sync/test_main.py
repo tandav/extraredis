@@ -154,8 +154,18 @@ def test_hset_fields(extraredis, extraredis_decode, khashtable):
 def test_mhget_field(extraredis, extraredis_decode, khashtable):
     assert extraredis.mhget_field(b'khashtable', field=b'b') == {b'0': b'0', b'1': b'10', b'2': b'20'}
     assert extraredis.mhget_field(b'khashtable', field=b'b', keys=[b'0', b'1']) == {b'0': b'0', b'1': b'10'}
+    assert extraredis.mhget_field(b'khashtable', field=b'b', keys=[b'7']) == {b'7': None}
+    assert extraredis.mhget_field(b'khashtable', field=b'z') == {b'0': None, b'1': None, b'2': None}
+    assert extraredis.mhget_field(b'khashtable', field=b'z', keys=[b'0', b'1']) == {b'0': None, b'1': None}
+
+    assert extraredis.mhget_field(b'khashtable', field=b'z', keys=[b'7']) == {b'7': None}
+
     assert extraredis_decode.mhget_field('khashtable', field='b') == {'0': '0', '1': '10', '2': '20'}
     assert extraredis_decode.mhget_field('khashtable', field='b', keys=['0', '1']) == {'0': '0', '1': '10'}
+    assert extraredis_decode.mhget_field('khashtable', field='b', keys=['7']) == {'7': None}
+    assert extraredis_decode.mhget_field('khashtable', field='z') == {'0': None, '1': None, '2': None}
+    assert extraredis_decode.mhget_field('khashtable', field='z', keys=['0', '1']) == {'0': None, '1': None}
+    assert extraredis_decode.mhget_field('khashtable', field='z', keys=['7']) == {'7': None}
 
 
 @pytest_mark_sync
@@ -170,6 +180,21 @@ def test_mhget_fields(extraredis, extraredis_decode, khashtable):
         b'1': {b'a': b'1', b'b': b'10'},
         b'2': {b'a': b'2', b'b': b'20'},
     }
+    assert extraredis.mhget_fields(b'khashtable', fields=[b'b'], keys=[b'7']) == {
+        b'7': {b'b': None},
+    }
+    assert extraredis.mhget_fields(b'khashtable', fields=[b'z']) == {
+        b'0': {b'z': None},
+        b'1': {b'z': None},
+        b'2': {b'z': None},
+    }
+    assert extraredis.mhget_fields(b'khashtable', fields=[b'z'], keys=[b'0', b'1']) == {
+        b'0': {b'z': None},
+        b'1': {b'z': None},
+    }
+    assert extraredis.mhget_fields(b'khashtable', fields=[b'z'], keys=[b'7']) == {
+        b'7': {b'z': None},
+    }
     assert extraredis.mhget_fields(b'khashtable', keys=[b'1']) == {b'1': {b'a': b'1', b'b': b'10', b'c': b'100'}}
     assert extraredis.mhget_fields(b'khashtable', keys=[b'1'], fields=[b'a', b'b']) == {b'1': {b'a': b'1', b'b': b'10'}}
 
@@ -182,6 +207,21 @@ def test_mhget_fields(extraredis, extraredis_decode, khashtable):
         '0': {'a': '0', 'b': '0'},
         '1': {'a': '1', 'b': '10'},
         '2': {'a': '2', 'b': '20'},
+    }
+    assert extraredis_decode.mhget_fields('khashtable', fields=['b'], keys=['7']) == {
+        '7': {'b': None},
+    }
+    assert extraredis_decode.mhget_fields('khashtable', fields=['z']) == {
+        '0': {'z': None},
+        '1': {'z': None},
+        '2': {'z': None},
+    }
+    assert extraredis_decode.mhget_fields('khashtable', fields=['z'], keys=['0', '1']) == {
+        '0': {'z': None},
+        '1': {'z': None},
+    }
+    assert extraredis_decode.mhget_fields('khashtable', fields=['z'], keys=['7']) == {
+        '7': {'z': None},
     }
     assert extraredis_decode.mhget_fields('khashtable', keys=['1']) == {'1': {'a': '1', 'b': '10', 'c': '100'}}
     assert extraredis_decode.mhget_fields('khashtable', keys=['1'], fields=['a', 'b']) == {'1': {'a': '1', 'b': '10'}}
