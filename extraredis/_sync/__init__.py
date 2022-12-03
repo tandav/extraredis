@@ -49,6 +49,8 @@ class ExtraRedis:
         return dict(zip(keys, values))
 
     def mset(self, prefix: AnyStr, mapping: dict[AnyStr, AnyStr]) -> None:
+        if len(mapping) == 0:
+            return
         if self.decode_responses:
             mapping = {prefix + ':' + k: v for k, v in mapping.items()}
         else:

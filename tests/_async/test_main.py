@@ -95,8 +95,10 @@ async def test_mget(extraredis, extraredis_decode, kvtable):
 
 @pytest_mark_asyncio
 async def test_mset(extraredis, extraredis_decode):
+    await extraredis.mset(b'kvtable', {})
     await extraredis.mset(b'kvtable', {b'3': b'3', b'4': b'4'})
     assert await extraredis.mget(b'kvtable') == {b'3': b'3', b'4': b'4'}
+    await extraredis_decode.mset('kvtable', {})
     await extraredis_decode.mset('kvtable', {'3': '3', '4': '4'})
     assert await extraredis_decode.mget('kvtable') == {'3': '3', '4': '4'}
 

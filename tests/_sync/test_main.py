@@ -94,8 +94,10 @@ def test_mget(extraredis, extraredis_decode, kvtable):
 
 @pytest_mark_sync
 def test_mset(extraredis, extraredis_decode):
+    extraredis.mset(b'kvtable', {})
     extraredis.mset(b'kvtable', {b'3': b'3', b'4': b'4'})
     assert extraredis.mget(b'kvtable') == {b'3': b'3', b'4': b'4'}
+    extraredis_decode.mset('kvtable', {})
     extraredis_decode.mset('kvtable', {'3': '3', '4': '4'})
     assert extraredis_decode.mget('kvtable') == {'3': '3', '4': '4'}
 
