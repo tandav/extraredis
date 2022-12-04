@@ -41,6 +41,14 @@ class ExtraRedis:
         else:
             return [self.addprefix(prefix, k) for k in keys]
 
+    def get(self, prefix: AnyStr, key: AnyStr) -> AnyStr | None:
+        pkey = self.addprefix(prefix, key)
+        return self.redis.get(pkey)
+
+    def set(self, prefix: AnyStr, key: AnyStr, value: AnyStr) -> None:
+        pkey = self.addprefix(prefix, key)
+        self.redis.set(pkey, value)
+
     def mget(self, prefix: AnyStr, keys: list[AnyStr] | None = None) -> dict[AnyStr, AnyStr]:
         pkeys = self.maddprefix(prefix, keys)
         values = self.redis.mget(pkeys)

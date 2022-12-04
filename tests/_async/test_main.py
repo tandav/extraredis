@@ -86,6 +86,22 @@ async def test_keys(extraredis, extraredis_decode, kvtable):
 
 
 @pytest_mark_asyncio
+async def test_get(extraredis, extraredis_decode, kvtable):
+    assert await extraredis.get(b'kvtable', b'1') == b'1'
+    assert await extraredis.get(b'kvtable', b'7') is None
+    assert await extraredis_decode.get('kvtable', '1') == '1'
+    assert await extraredis_decode.get('kvtable', '7') is None
+
+
+@pytest_mark_asyncio
+async def test_set(extraredis, extraredis_decode, kvtable):
+    await extraredis.set(b'kvtable', b'5', b'5')
+    assert await extraredis.get(b'kvtable', b'5') == b'5'
+    await extraredis_decode.set('kvtable', '5', '5')
+    assert await extraredis_decode.get('kvtable', '5') == '5'
+
+
+@pytest_mark_asyncio
 async def test_mget(extraredis, extraredis_decode, kvtable):
     assert await extraredis.mget(b'kvtable') == {b'0': b'0', b'1': b'1', b'2': b'2'}
     assert await extraredis.mget(b'kvtable', [b'0', b'1']) == {b'0': b'0', b'1': b'1'}

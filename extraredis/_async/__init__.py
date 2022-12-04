@@ -41,6 +41,14 @@ class ExtraRedisAsync:
         else:
             return [self.addprefix(prefix, k) for k in keys]
 
+    async def get(self, prefix: AnyStr, key: AnyStr) -> AnyStr | None:
+        pkey = self.addprefix(prefix, key)
+        return await self.redis.get(pkey)
+
+    async def set(self, prefix: AnyStr, key: AnyStr, value: AnyStr) -> None:
+        pkey = self.addprefix(prefix, key)
+        await self.redis.set(pkey, value)
+
     async def mget(self, prefix: AnyStr, keys: list[AnyStr] | None = None) -> dict[AnyStr, AnyStr]:
         pkeys = await self.maddprefix(prefix, keys)
         values = await self.redis.mget(pkeys)
