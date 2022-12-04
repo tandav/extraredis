@@ -1,4 +1,5 @@
 import os
+from collections.abc import Iterable
 from typing import AnyStr
 
 import redis.asyncio as redis_sync  # isort:skip
@@ -49,7 +50,11 @@ class ExtraRedis:
         pkey = self.addprefix(prefix, key)
         self.redis.set(pkey, value)
 
-    def mget(self, prefix: AnyStr, keys: list[AnyStr] | None = None) -> dict[AnyStr, AnyStr]:
+    def delete(self, prefix: AnyStr, *keys: Iterable[AnyStr]) -> None:
+        pkeys = self.maddprefix(prefix, keys)
+        self.redis.delete(*pkeys)
+
+    def mget(self, prefix: AnyStr, keys: Iterable[AnyStr] | None = None) -> dict[AnyStr, AnyStr]:
         pkeys = self.maddprefix(prefix, keys)
         values = self.redis.mget(pkeys)
         if keys is None:

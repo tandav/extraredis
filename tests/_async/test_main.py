@@ -102,6 +102,21 @@ async def test_set(extraredis, extraredis_decode, kvtable):
 
 
 @pytest_mark_asyncio
+async def test_delete(extraredis, extraredis_decode, kvtable):
+    await extraredis.delete(b'kvtable', b'1')
+    assert await extraredis.get(b'kvtable', b'1') is None
+    await extraredis.delete(b'kvtable', b'2', b'3')
+    assert await extraredis.get(b'kvtable', b'2') is None
+    assert await extraredis.get(b'kvtable', b'3') is None
+
+    await extraredis_decode.delete('kvtable', '1')
+    assert await extraredis_decode.get('kvtable', '1') is None
+    await extraredis_decode.delete('kvtable', '2', '3')
+    assert await extraredis_decode.get('kvtable', '2') is None
+    assert await extraredis_decode.get('kvtable', '3') is None
+
+
+@pytest_mark_asyncio
 async def test_mget(extraredis, extraredis_decode, kvtable):
     assert await extraredis.mget(b'kvtable') == {b'0': b'0', b'1': b'1', b'2': b'2'}
     assert await extraredis.mget(b'kvtable', [b'0', b'1']) == {b'0': b'0', b'1': b'1'}

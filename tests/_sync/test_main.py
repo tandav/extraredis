@@ -101,6 +101,21 @@ def test_set(extraredis, extraredis_decode, kvtable):
 
 
 @pytest_mark_sync
+def test_delete(extraredis, extraredis_decode, kvtable):
+    extraredis.delete(b'kvtable', b'1')
+    assert extraredis.get(b'kvtable', b'1') is None
+    extraredis.delete(b'kvtable', b'2', b'3')
+    assert extraredis.get(b'kvtable', b'2') is None
+    assert extraredis.get(b'kvtable', b'3') is None
+
+    extraredis_decode.delete('kvtable', '1')
+    assert extraredis_decode.get('kvtable', '1') is None
+    extraredis_decode.delete('kvtable', '2', '3')
+    assert extraredis_decode.get('kvtable', '2') is None
+    assert extraredis_decode.get('kvtable', '3') is None
+
+
+@pytest_mark_sync
 def test_mget(extraredis, extraredis_decode, kvtable):
     assert extraredis.mget(b'kvtable') == {b'0': b'0', b'1': b'1', b'2': b'2'}
     assert extraredis.mget(b'kvtable', [b'0', b'1']) == {b'0': b'0', b'1': b'1'}
