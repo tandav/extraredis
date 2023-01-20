@@ -1,9 +1,16 @@
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/tandav/extraredis)
+
 # extraredis
 
-## install
+Extra helper functions for python redis library. Containts both sync and async versions.
 
 ## install
-```shell
-# install from private pypi
-pip install --extra-index-url https://__token__:$GITEA_TOKEN@gitea.tandav.me/api/packages/selfhosted/pypi/simple extraredis
+### install from [pypi](https://pypi.org/project/extraredis/)
+```sh
+pip install extraredis
+```
+
+### development
+```sh
+pip install -e .[dev]
 ```
