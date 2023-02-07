@@ -1,4 +1,3 @@
-import os
 from collections.abc import Iterable
 from typing import AnyStr
 
@@ -14,27 +13,25 @@ class ExtraRedisAsync:
         redis: redis_module.Redis | None = None,
         **kwargs,
     ):
-        self.decode_responses = kwargs.get('decode_responses', False)
-        self.redis = redis or redis_module.Redis(
-            host=os.environ['REDIS_HOST'],
-            port=os.environ['REDIS_PORT'],
-            password=os.environ['REDIS_PASSWORD'],
-            **kwargs,
-        )
+        self.redis = redis or redis_module.Redis(**kwargs)
+
+    @classmethod
+    def from_url(cls, url: str, **kwargs) -> 'ExtraRedisAsync':
+        return cls(redis_module.Redis.from_url(url, **kwargs))
 
     def addprefix(self, prefix: AnyStr, key: AnyStr) -> bytes:
-        if self.decode_responses:
+        if self.redis.get_connection_kwargs()['decode_responses']:
             return prefix + ':' + key
         return prefix + b':' + key
 
     def mremoveprefix(self, prefix: AnyStr, pkeys: list[AnyStr]) -> list[AnyStr]:
-        if self.decode_responses:
+        if self.redis.get_connection_kwargs()['decode_responses']:
             return [k.removeprefix(prefix + ':') for k in pkeys]
         return [k.removeprefix(prefix + b':') for k in pkeys]
 
     async def maddprefix(self, prefix: AnyStr, keys: list[AnyStr] | None = None) -> list[AnyStr]:
         if keys is None:
-            if self.decode_responses:
+            if self.redis.get_connection_kwargs()['decode_responses']:
                 suffix = ':*'
             else:
                 suffix = b':*'
@@ -64,7 +61,7 @@ class ExtraRedisAsync:
     async def mset(self, prefix: AnyStr, mapping: dict[AnyStr, AnyStr]) -> None:
         if len(mapping) == 0:
             return
-        if self.decode_responses:
+        if self.redis.get_connection_kwargs()['decode_responses']:
             mapping = {prefix + ':' + k: v for k, v in mapping.items()}
         else:
             mapping = {prefix + b':' + k: v for k, v in mapping.items()}
